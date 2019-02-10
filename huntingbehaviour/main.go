@@ -3,8 +3,8 @@ package main
 import (
 	"image"
 	"image/color"
+	"image/draw"
 
-	"github.com/SolarLune/paths"
 	"github.com/peterhellberg/gfx"
 	"golang.org/x/image/colornames"
 )
@@ -23,44 +23,40 @@ func main() {
 		"x x    x",
 		"xxxxxxxx",
 	}
-	height := len(layout)
-	width := len(layout[0])
-	img := gfx.NewImage(width*tileSize, height*tileSize, color.Transparent)
+	w := newWorld(layout)
 
-	// Draw the room
-	for y, row := range layout {
-		for x, tile := range row {
-			c := colornames.Black
-			switch tile {
-			case 'x':
-				c = colornames.Grey
-			}
+	start, dest := w.room.Get(1, 6), w.room.Get(5, 1)
 
-			// Draw the tile
-			drawTile(img, x, y, c)
-		}
+	c := Creature{
+		pos:  gfx.V(float64(start.X)*tileSize, float64(start.Y)*tileSize),
+		path: w.findPath(start, dest),
 	}
 
-	room := paths.NewGridFromStringArrays(layout)
-	start, dest := room.Get(1, 6), room.Get(5, 1)
-
-	// Turn off movement in walls
-	for _, cell := range room.GetCellsByRune('x') {
-		cell.Walkable = false
-	}
-	path := room.GetPath(start, dest, false)
-
-	// Draw path and start and finish
-	for _, tile := range path.Cells {
-		drawTile(img, tile.X, tile.Y, colornames.Pink)
+	animation := gfx.Animation{
+		Delay: 10, // Delay between frames
 	}
 
-	drawTile(img, start.X, start.Y, colornames.Blue)
-	drawTile(img, dest.X, dest.Y, colornames.Red)
-	gfx.SavePNG("images/basic_3.png", img)
+	// Draw frame
+	for _, stepPosition := range c.path {
+		img := gfx.NewPaletted(w.width*tileSize, w.width*tileSize, gfx.PaletteEDG32)
+
+		// Background
+		draw.Draw(img, img.Bounds(), w.background, image.ZP, draw.Over)
+
+		// Start and finish
+		drawTile(img, start.X, start.Y, colornames.Blue)
+		drawTile(img, dest.X, dest.Y, colornames.Red)
+
+		// Creature
+		creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition.AddXY(tileSize/2, tileSize/2))
+		gfx.DrawImageRectangle(img, creatureRect.Bounds(), colornames.Pink)
+
+		animation.AddPalettedImage(img)
+	}
+	animation.SaveGIF("images/refactor_2.gif")
 }
 
-func drawTile(img *image.NRGBA, x, y int, c color.Color) {
+func drawTile(img draw.Image, x, y int, c color.Color) {
 	tileRectangle := image.Rect(0, 0, tileSize, tileSize).Add(image.Pt(x*tileSize, y*tileSize))
 	gfx.DrawImageRectangle(img, tileRectangle, c)
 }
