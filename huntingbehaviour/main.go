@@ -15,12 +15,12 @@ func main() {
 	// Layout of the room
 	layout := []string{
 		"xxxxxxxx",
-		"x   x  x",
-		"x   xx x",
-		"x      x",
-		"x      x",
-		"x x    x",
-		"x x    x",
+		"x   x-|x",
+		"x   xx|x",
+		"x     |x",
+		"x|-|  |x",
+		"x|x|  |x",
+		"x|x|--|x",
 		"xxxxxxxx",
 	}
 	w := newWorld(layout)
@@ -48,12 +48,13 @@ func main() {
 		drawTile(img, dest.X, dest.Y, colornames.Red)
 
 		// Creature
-		creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition.AddXY(tileSize/2, tileSize/2))
+		creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition)
+		creatureRect = creatureRect.Moved(gfx.V(tileSize/2, tileSize/2)) // Move to center of tile
 		gfx.DrawImageRectangle(img, creatureRect.Bounds(), colornames.Pink)
 
 		animation.AddPalettedImage(img)
 	}
-	animation.SaveGIF("images/refactor_2.gif")
+	animation.SaveGIF("images/platformer_2.gif")
 }
 
 func drawTile(img draw.Image, x, y int, c color.Color) {

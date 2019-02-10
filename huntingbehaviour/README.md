@@ -25,6 +25,8 @@ To keep this article as simple as possible, I will try to use existing libraries
 
 ## 1. Drawing the world
 
+([code for this part](https://github.com/kyeett/tutorials/blob/hb-draw-world/huntingbehaviour/README.md))
+
 First, let's draw our world. We define it using string slices (will be used by the path finding algorithm later).
 
 - `'x'` is a wall
@@ -74,9 +76,11 @@ Here is the result. Gray is wall (`x`), black is empty space (``).
 
 ![room](images/out.png)
 
-Done!
+_Done!_
 
 ## 2. Basic path finding
+
+([code for this part](https://github.com/kyeett/tutorials/blob/hb-basic-path-finding/huntingbehaviour/README.md))
 
 Now that we can visualize our world, let's try finding a way from point A to point B in it!
 
@@ -144,13 +148,15 @@ As you can see, it _almost_ works, beside from the fact that we walk through a w
     ...
 ```
 
-Much better! **Done**
+Much better! _Done!_
 
 |                                | + path                         |
 | ------------------------------ | ------------------------------ |
 | ![basic_1](images/basic_1.png) | ![basic_3](images/basic_3.png) |
 
 ## 3. Refactor and animate
+
+([code for this part](https://github.com/kyeett/tutorials/blob/hb-refactor-and-animate/huntingbehaviour/README.md))
 
 Now it is time to do some refactoring. We create a `World` struct that holds the room data and the background image which is static.
 
@@ -275,7 +281,10 @@ func (w *World) findPath(start, dest *paths.Cell) []gfx.Vec {
 Now we can draw the creature position, rather then the cell in a path
 
 ```go
-creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition.AddXY(tileSize/2, tileSize/2))
+creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition)
+// Move to center of tile
+creatureRect = creatureRect.Moved(gfx.V(tileSize/2,
+tileSize/2))
 gfx.DrawImageRectangle(img, creatureRect.Bounds(), colornames.Pink)
 ```
 
@@ -283,11 +292,51 @@ gfx.DrawImageRectangle(img, creatureRect.Bounds(), colornames.Pink)
 
 ![move along path 2](images/refactor_2.gif)
 
-**Done!**
+_Done!_
 
 ## 4. Platformer movement
 
-TBD
+([code for this part](https://github.com/kyeett/tutorials/blob/hb-platformer-movement/huntingbehaviour/README.md))
+
+Currently, our creature is following a path in the air! To start out with, we want a ground creature, let's make the air not walkable, and add a few ladders.
+
+Here is the new `layout`
+
+```go
+layout := []string{
+    "xxxxxxxx",
+    "x   x-|x",
+    "x   xx|x",
+    "x     |x",
+    "x|-|  |x",
+    "x|x|  |x",
+    "x|x|--|x",
+    "xxxxxxxx",
+}
+```
+
+- '`x`' is a wall, **_not walkable_**
+- '``' is air (previously empty space), **_not walkable_**
+- '`|`' is a ladder
+- '`-`' is a walkable tile, just to distinguish from '``'
+
+Then we turn of `Walkable` on the air, and update the coloring, and we get a nice, platformer movement
+
+```go
+// Turn off movement in walls
+for _, cell := range room.GetCellsByRune('x') {
+    cell.Walkable = false
+}
+
+// Turn off movement in air
+for _, cell := range room.GetCellsByRune(' ') {
+    cell.Walkable = false
+}
+```
+
+![platformer](images/platformer_1.gif)
+
+_Done!_
 
 ## 5. Smooth path finding
 

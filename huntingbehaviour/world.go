@@ -23,10 +23,16 @@ func newWorld(layout []string) World {
 	// Draw the room
 	for y, row := range layout {
 		for x, tile := range row {
-			c := colornames.Black
+			var c color.RGBA
 			switch tile {
 			case 'x':
 				c = colornames.Grey
+			case '|':
+				c = colornames.Brown
+			case '-':
+				c = colornames.Green
+			default:
+				c = colornames.Black
 			}
 
 			drawTile(img, x, y, c)
@@ -37,6 +43,11 @@ func newWorld(layout []string) World {
 
 	// Turn off movement in walls
 	for _, cell := range room.GetCellsByRune('x') {
+		cell.Walkable = false
+	}
+
+	// Turn off movement in air
+	for _, cell := range room.GetCellsByRune(' ') {
 		cell.Walkable = false
 	}
 
