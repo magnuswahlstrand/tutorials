@@ -16,12 +16,20 @@ To keep this article as simple as possible, I will try to use existing libraries
 
 ## Our goal
 
-1. Drawing the world
-2. Basic path finding
-3. Refactor and animate
-4. Platformer movement
-5. Smooth path finding
-6. (optional) Improve the graphics
+**(will be updated as the tutorial is completed)**
+
+![smooth movement](images/smooth_1.gif)
+
+1. ~~Drawing the world~~
+2. ~~Basic path finding~~
+3. ~~Refactor and animate~~
+4. ~~Platformer movement~~
+5. ~~Smooth path finding~~
+6. 
+7. _...some more steps here..._
+8. 
+9. (optional) Improve the graphics
+
 
 ## 1. Drawing the world
 
@@ -128,7 +136,7 @@ func drawTile(img *image.NRGBA, x, y int, c color.Color) {
 **Result:**
 
 |                                | + path                         |
-| ------------------------------ | ------------------------------ |
+|--------------------------------|--------------------------------|
 | ![basic_1](images/basic_1.png) | ![basic_2](images/basic_2.png) |
 
 - start (blue)
@@ -151,7 +159,7 @@ As you can see, it _almost_ works, beside from the fact that we walk through a w
 Much better! _Done!_
 
 |                                | + path                         |
-| ------------------------------ | ------------------------------ |
+|--------------------------------|--------------------------------|
 | ![basic_1](images/basic_1.png) | ![basic_3](images/basic_3.png) |
 
 ## 3. Refactor and animate
@@ -336,8 +344,94 @@ for _, cell := range room.GetCellsByRune(' ') {
 
 ![platformer](images/platformer_1.gif)
 
-_Done!_
+_Done!_ 
 
 ## 5. Smooth path finding
 
-TBD
+What we did in the previous part is pretty cool, but it doesn't look very natural. In order to we want smooth movement between then tiles, and also smoother transitions in the corners. This can be accomplished using simulated physics and path following.
+
+To do this, we need a few modifications
+
+First, add velocity vector `v` and the index `currentNode` of the point in the path we are going to next
+
+```go
+type Creature struct {
+    pos, v      gfx.Vec
+    path        []gfx.Vec
+    currentNode int
+}
+```
+
+Create a `move()` method for the creature
+  
+```go
+
+const maxSpeed = 2
+const maxAcceleration = 0.5
+func (c *Creature) move() {
+    steering := c.followPath()
+
+    // Limit acceleration
+    if steering.Len() > maxAcceleration {
+        steering = steering.Unit().Scaled(maxAcceleration)
+    }
+
+    c.v = c.v.Add(steering)
+
+    // Limit velocity
+    if c.v.Len() > maxSpeed {
+        c.v = c.v.Unit().Scaled(maxSpeed)
+    }
+
+    // Move creature with velocity c.v
+    c.pos = c.pos.Add(c.v)
+}
+```
+
+Create a `followPath()` method the creature
+
+```go
+// Find the vector to the next target
+func (c *Creature) followPath() gfx.Vec {
+    target := c.path[c.currentNode]
+
+    // Calculate distance to target node
+    distance := target.Sub(c.pos).Len()
+    if distance < 20.0 {
+        c.currentNode++
+    }
+
+    return c.pos.To(target)
+}
+```
+
+Finally, we tell the loop in **main.go** to run until the end of the path is reached, and call `c.move()` each round
+
+```go
+    // Draw frame
+    for c.currentNode < len(c.path) {
+        c.move()
+
+        ...
+        // Creature
+        creatureRect := gfx.R(-2, -2, 2, 2).Moved(c.pos)
+```
+
+**Result**:
+
+![smooth movement](images/smooth_1.gif)
+
+_Starting to look a lot like a hungry lizard, doesn't it?_
+
+### (optional) Resources for path following
+
+I based my code on the examples from this article: [Understanding Steering Behaviors: Path Following](https://gamedevelopment.tutsplus.com/tutorials/understanding-steering-behaviors-path-following--gamedev-8769)
+
+**Craig Reynolds & Boids model**
+
+_The article above is based on the amazing work by Craig Reynolds who came up with the Boids model in 1987! I recommend reading his articles for a deeper understanding_
+
+- [Boids](http://www.red3d.com/cwr/boids/)
+- [Steering](http://www.red3d.com/cwr/steer/)
+
+## 6-12 TBD

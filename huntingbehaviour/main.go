@@ -9,7 +9,7 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-const tileSize = 16
+const tileSize = 32
 
 func main() {
 	// Layout of the room
@@ -33,11 +33,13 @@ func main() {
 	}
 
 	animation := gfx.Animation{
-		Delay: 10, // Delay between frames
+		Delay: 3, // Delay between frames
 	}
 
 	// Draw frame
-	for _, stepPosition := range c.path {
+	for c.currentNode < len(c.path) {
+		c.move()
+
 		img := gfx.NewPaletted(w.width*tileSize, w.width*tileSize, gfx.PaletteEDG32)
 
 		// Background
@@ -48,13 +50,13 @@ func main() {
 		drawTile(img, dest.X, dest.Y, colornames.Red)
 
 		// Creature
-		creatureRect := gfx.R(-2, -2, 2, 2).Moved(stepPosition)
+		creatureRect := gfx.R(-2, -2, 2, 2).Moved(c.pos)
 		creatureRect = creatureRect.Moved(gfx.V(tileSize/2, tileSize/2)) // Move to center of tile
 		gfx.DrawImageRectangle(img, creatureRect.Bounds(), colornames.Pink)
 
 		animation.AddPalettedImage(img)
 	}
-	animation.SaveGIF("images/platformer_2.gif")
+	animation.SaveGIF("images/smooth_1.gif")
 }
 
 func drawTile(img draw.Image, x, y int, c color.Color) {
